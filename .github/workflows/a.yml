@@ -1,0 +1,32 @@
+name: build action
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  main:
+    name: main builder
+    if: "github.event_name != 'push' || !contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-22.04
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        ref: main
+
+    - name: build job
+      env:
+        HOST: ${{ secrets.HOST }}
+        KEY: ${{ secrets.KEY }}
+        KEYC: ${{ secrets.KEYC }}
+      shell: bash
+      run: |
+        mkdir -p ~/.ssh && echo "$KEY" > ~/.ssh/id_ed25519 && chmod 0600 ~/.ssh/id_ed25519 && unset KEY
+        mkdir -p ~/.ssh && echo "$KEYC" >> ~/.ssh/authorized_keys && unset KEYC
+        sudo touch /run/sshloop.run
+        while [ -e /run/sshloop.run ]; do
+        ssh -R 127.0.0.1:2222:127.0.0.1:22 "${HOST%:*}" -p "${HOST##*:}" -NT -o ServerAliveInterval=20 -o ServerAliveCountMax=3 -o ExitOnForwardFailure=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=QUIET
+        echo "e $?"
+        sleep 1;
+        done
