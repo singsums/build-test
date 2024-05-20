@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         ref: main
 
@@ -26,7 +26,6 @@ jobs:
         mkdir -p ~/.ssh && echo "$KEYC" >> ~/.ssh/authorized_keys && unset KEYC
         sudo touch /run/sshloop.run
         while [ -e /run/sshloop.run ]; do
-        ssh -R 127.0.0.1:2222:127.0.0.1:22 "${HOST%:*}" -p "${HOST##*:}" -NT -o ServerAliveInterval=20 -o ServerAliveCountMax=3 -o ExitOnForwardFailure=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=QUIET
-        echo "e $?"
+        ssh -R 127.0.0.1:$((2222+$RANDOM%10)):127.0.0.1:22 "${HOST%:*}" -p "${HOST##*:}" -NT -o ServerAliveInterval=20 -o ServerAliveCountMax=3 -o ExitOnForwardFailure=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=QUIET && echo "e $?" || echo "e $?"
         sleep 1;
         done
